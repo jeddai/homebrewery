@@ -3,7 +3,7 @@ const React = require('react');
 const createClass = require('create-react-class');
 const _ = require('lodash');
 const cx = require('classnames');
-const closeTag = require('./close-tag');
+const closeTag = require('./helpers/close-tag');
 
 let CodeMirror;
 if(typeof navigator !== 'undefined'){
@@ -28,9 +28,37 @@ if(typeof navigator !== 'undefined'){
 	require('codemirror/addon/edit/trailingspace.js');
 	require('codemirror/addon/selection/active-line.js');
 
-	const foldCode = require('./fold-code');
+	const foldCode = require('./helpers/fold-code');
 	foldCode.registerHomebreweryHelper(CodeMirror);
 }
+
+const themeWidgets = [{
+	name    : 'monster',
+	pattern : '^{{monster(?:[^a-zA-Z].*)?$',
+	classes : ['frame', 'wide']
+}, {
+	name    : 'classTable',
+	pattern : '^{{classTable(?:[^a-zA-Z].*)?$',
+	classes : ['frame', 'decoration', 'wide']
+}, {
+	name    : 'image',
+	pattern : '^!\\[(?:[a-zA-Z ]+)?\\]\\(.*\\).*{[a-zA-Z0-9:, -]+}$',
+	fields  : []
+}, {
+	name    : 'artist',
+	pattern : '^{{artist([^a-zA-Z].*)?$',
+	fields  : [{
+		name      : 'top',
+		pattern   : 'top:((?:-)?\\d*.?\\d*)px',
+		type      : 'number',
+		increment : 5
+	}, {
+		name      : 'left',
+		pattern   : 'left:((?:-)?\\d*.?\\d*)px',
+		type      : 'number',
+		increment : 5
+	}]
+}];
 
 const CodeEditor = createClass({
 	getDefaultProps : function() {
@@ -44,7 +72,9 @@ const CodeEditor = createClass({
 
 	getInitialState : function() {
 		return {
-			docs : {}
+			docs          : {},
+			widgetUtils   : {},
+			focusedWidget : null
 		};
 	},
 
@@ -74,6 +104,9 @@ const CodeEditor = createClass({
 		} else if(this.codeMirror?.getValue() != this.props.value) { //update editor contents if brew.text is changed from outside
 			this.codeMirror.setValue(this.props.value);
 		}
+
+		this.state.widgetUtils.updateWidgetGutter();
+		this.state.widgetUtils.updateAllLineWidgets();
 	},
 
 	buildEditor : function() {
@@ -121,15 +154,40 @@ const CodeEditor = createClass({
 					return `\u21A4 ${text} \u21A6`;
 				}
 			},
-			gutters           : ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+			gutters           : ['CodeMirror-linenumbers', 'CodeMirror-foldgutter', 'widget-gutter'],
 			showTrailingSpace : true,
 			autoCloseTags     : true,
 			styleActiveLine   : true
 		});
 		closeTag.autoCloseCurlyBraces(CodeMirror, this.codeMirror);
 
+		this.setState({
+			widgetUtils : require('./helpers/widgets')(CodeMirror, themeWidgets, this.codeMirror)
+		});
+
 		// Note: codeMirror passes a copy of itself in this callback. cm === this.codeMirror. Either one works.
-		this.codeMirror.on('change', (cm)=>{this.props.onChange(cm.getValue());});
+		this.codeMirror.on('change', (cm)=>{
+			this.props.onChange(cm.getValue());
+
+			this.state.widgetUtils.updateWidgetGutter();
+		});
+
+		this.codeMirror.on('gutterClick', (cm, n)=>{
+			const { gutterMarkers } = this.codeMirror.lineInfo(n);
+
+			if(!!gutterMarkers && !!gutterMarkers['widget-gutter']) {
+				const { widgets } = this.codeMirror.lineInfo(n);
+				if(!widgets) {
+					this.state.widgetUtils.updateLineWidgets(n);
+				} else {
+					this.codeMirror.operation(()=>{
+						for (const widget of widgets) {
+							this.state.widgetUtils.removeLineWidgets(widget);
+						}
+					});
+				}
+			}
+		});
 		this.updateSize();
 	},
 
