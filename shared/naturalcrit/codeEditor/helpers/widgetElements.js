@@ -1,5 +1,7 @@
 const React = require('react');
 const _ = require('lodash');
+const Field = require('../field/field.jsx');
+
 module.exports = function(CodeMirror) {
 	return {
 		cClass : (cm, n, prefix, cClass)=>{
@@ -16,10 +18,23 @@ module.exports = function(CodeMirror) {
 						e.target.checked = true;
 				}
 			};
-			return <React.Fragment>
+			return <React.Fragment key={`${_.kebabCase(prefix)}-${cClass}-${n}`}>
 				<input type='checkbox' id={id} onChange={frameChange} checked={_.includes(text, `,${cClass}`)}/>
 				<label htmlFor={id}>{_.startCase(cClass)}</label>
 			</React.Fragment>;
+		},
+		field : (cm, n, field)=>{
+			if(!['number'].includes(field.type)) return null;
+			const { text } = cm.lineInfo(n);
+
+			const inputChange = (e)=>{
+				const current = text.match(field.pattern)[1];
+				let index = text.indexOf(`${field.name}:${current}`);
+				if(index === -1) return;
+				index = index + 1 + field.name.length;
+				cm.replaceRange(e.target.value, CodeMirror.Pos(n, index), CodeMirror.Pos(n, index + current.length), '+insert');
+			};
+			return <Field field={field} value={text.match(field.pattern)[1]} n={n} onChange={inputChange} key={`${field.name}-${field.type}-${n}`}/>;
 		}
 	};
 };

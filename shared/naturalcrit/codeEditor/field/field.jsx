@@ -14,7 +14,7 @@ const Field = createClass({
 
 	getInitialState : function() {
 		return {
-			value   : ''
+			value : ''
 		};
 	},
 

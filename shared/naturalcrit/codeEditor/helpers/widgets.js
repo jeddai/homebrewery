@@ -1,32 +1,16 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 const _ = require('lodash');
-const Field = require('../field/field.jsx');
 
 module.exports = function(CodeMirror, widgets, cm) {
-	const { cClass } = require('./widgetElements')(CodeMirror);
+	const { cClass, field } = require('./widgetElements')(CodeMirror);
 	const widgetOptions = widgets.map((widget)=>({
 		name         : widget.name,
 		pattern      : new RegExp(widget.pattern),
 		createWidget : (n, node)=>{
 			const parent = document.createElement('div');
-			const classes = (widget.classes || []).map((c, i)=><React.Fragment key={`class${n}${i}`}>
-				{cClass(cm, n, `{{${widget.name}`, c)}
-			</React.Fragment>);
-
-			const fields = (widget.fields || []).map((field, i)=>{
-				if(!['number'].includes(field.type)) return null;
-				const { text } = cm.lineInfo(n);
-
-				const inputChange = (e)=>{
-					const current = text.match(field.pattern)[1];
-					let index = text.indexOf(`${field.name}:${current}`);
-					if(index === -1) return;
-					index = index + 1 + field.name.length;
-					cm.replaceRange(e.target.value, CodeMirror.Pos(n, index), CodeMirror.Pos(n, index + current.length), '+insert');
-				};
-				return <Field field={field} value={text.match(field.pattern)[1]} n={n} onChange={inputChange} key={`${field.name}${n}${i}`}/>;
-			}).filter((f)=>!!f);
+			const classes = (widget.classes || []).map((c, i)=>cClass(cm, n, `{{${widget.name}`, c));
+			const fields = (widget.fields || []).map((f, i)=>field(cm, n, f)).filter((f)=>!!f);
 
 			ReactDOM.render(<React.Fragment>
 				{classes}
