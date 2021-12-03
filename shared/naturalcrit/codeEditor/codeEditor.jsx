@@ -50,14 +50,22 @@ const themeWidgets = [{
 	pattern : '^{{artist([^a-zA-Z].*)?$',
 	fields  : [{
 		name      : 'top',
-		pattern   : 'top:((?:-)?\\d*.?\\d*)px',
+		pattern   : '(top):((?:-)?\\d*.?\\d*)px',
 		type      : 'number',
-		increment : 5
+		increment : 5,
+		break     : true
 	}, {
 		name      : 'left',
-		pattern   : 'left:((?:-)?\\d*.?\\d*)px',
+		pattern   : '(left):((?:-)?\\d*.?\\d*)px',
 		type      : 'number',
-		increment : 5
+		increment : 5,
+		break     : true
+	}, {
+		name      : 'bottom margin',
+		pattern   : '(margin-bottom):((?:-)?\\d*.?\\d*)px',
+		type      : 'number',
+		increment : 5,
+		break     : true
 	}]
 }];
 

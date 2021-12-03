@@ -1,6 +1,6 @@
 const React = require('react');
 const _ = require('lodash');
-const Field = require('../field/field.jsx');
+const Field = require('./field/field.jsx');
 
 module.exports = function(CodeMirror) {
 	return {
@@ -28,13 +28,16 @@ module.exports = function(CodeMirror) {
 			const { text } = cm.lineInfo(n);
 
 			const inputChange = (e)=>{
-				const current = text.match(field.pattern)[1];
-				let index = text.indexOf(`${field.name}:${current}`);
+				const [_, fieldLabel, current] = text.match(field.pattern);
+				let index = text.indexOf(`${fieldLabel}:${current}`);
 				if(index === -1) return;
 				index = index + 1 + field.name.length;
 				cm.replaceRange(e.target.value, CodeMirror.Pos(n, index), CodeMirror.Pos(n, index + current.length), '+insert');
 			};
-			return <Field field={field} value={text.match(field.pattern)[1]} n={n} onChange={inputChange} key={`${field.name}-${field.type}-${n}`}/>;
+			return <React.Fragment key={`${field.name}-${field.type}-${n}`}>
+				<Field field={field} value={text.match(field.pattern)[2]} n={n} onChange={inputChange}/>
+				{!!field.break ? <br/> : null}
+			</React.Fragment>;
 		}
 	};
 };

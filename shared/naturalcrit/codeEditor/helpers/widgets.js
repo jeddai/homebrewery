@@ -3,7 +3,7 @@ const ReactDOM = require('react-dom');
 const _ = require('lodash');
 
 module.exports = function(CodeMirror, widgets, cm) {
-	const { cClass, field } = require('./widgetElements')(CodeMirror);
+	const { cClass, field } = require('./widget-elements')(CodeMirror);
 	const widgetOptions = widgets.map((widget)=>({
 		name         : widget.name,
 		pattern      : new RegExp(widget.pattern),

@@ -1,3 +1,4 @@
+require('./field.less');
 const React = require('react');
 const createClass = require('create-react-class');
 const _ = require('lodash');
@@ -35,8 +36,10 @@ const Field = createClass({
 		const { field, n } = this.props;
 		const id = `${field.name}-${field.type}-${n}`;
 		return <React.Fragment>
-			<label htmlFor={id}>{_.startCase(field.name)}</label>
-			<input id={id} type='number' value={this.state.value} step={field.increment || 1} onChange={this.change}/>
+			<div className='widget-field'>
+				<label htmlFor={id}>{_.startCase(field.name)}:</label>
+				<input id={id} type='number' value={this.state.value} step={field.increment || 1} onChange={this.change}/>
+			</div>
 		</React.Fragment>;
 	}
 });
